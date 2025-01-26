@@ -1,6 +1,7 @@
 import dash
 from dash import dcc, html, Input, Output
 import plotly.graph_objs as go
+from dash.exceptions import PreventUpdate
 from functions import *
 
 
@@ -130,7 +131,7 @@ app.layout = html.Div(
 @app.callback(
     [
         Output("plot", "figure"),
-        Output("ols-results", "children")
+        # Output("ols-results", "children")
     ],
     [
         Input("alpha", "value"),
@@ -143,45 +144,46 @@ app.layout = html.Div(
     ],
 )
 def update_graph(alpha, beta, theta, rho, var_u, var_v, cov_uv):
+
+    if None in locals().values():
+        raise PreventUpdate
+
     T = 100  # Fixed time series length
     x, y = routine(alpha, beta, theta, rho, var_u, var_v, cov_uv, T)
 
-    figure = {
-        "data": [
-            go.Scatter(x=np.arange(1, T), y=x[1:], mode="lines", name="x"),
-            go.Scatter(x=np.arange(1, T), y=y, mode="lines", name="y"),
-        ],
-        "layout": go.Layout(
-            title="Time Series of x and y",
-            xaxis={"title": "Time"},
-            yaxis={"title": "Value"},
-            template="plotly_white",
-        ),
-    }
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=np.arange(1, T), y=x, mode="lines", name="x"))
+    fig.add_trace(go.Scatter(x=np.arange(1, T), y=y, mode="lines", name="y"))
+    fig.update_layout(
+        title="Time Series of x and y",
+        xaxis_title="Time",
+        yaxis_title="Value",
+        template="plotly_white"
+    )
 
-    params = estimate_parameters(x, y)
-    # Generate statistical boxes
-    stats_boxes = []
-    for param, (value, p_value, r2) in params.items():
-        box_content = [html.P(f"{param}: {value:.4f}")]
-        if p_value is not None:
-            box_content.append(html.P(f"p-value: {p_value:.4f}"))
-        if r2 is not None:
-            box_content.append(html.P(f"R²: {r2:.4f}"))
-        stats_boxes.append(
-            html.Div(
-                box_content,
-                style={
-                    "border": "1px solid #ddd",
-                    "borderRadius": "5px",
-                    "padding": "10px",
-                    "margin": "5px",
-                    "width": "200px",
-                    "backgroundColor": "#f9f9f9",
-                },
-            )
-        )
-    return figure, stats_boxes
+    # params = estimate_parameters(x, y)
+    # # Generate statistical boxes
+    # stats_boxes = []
+    # for param, (value, p_value, r2) in params.items():
+    #     box_content = [html.P(f"{param}: {value:.4f}")]
+    #     if p_value is not None:
+    #         box_content.append(html.P(f"p-value: {p_value:.4f}"))
+    #     if r2 is not None:
+    #         box_content.append(html.P(f"R²: {r2:.4f}"))
+    #     stats_boxes.append(
+    #         html.Div(
+    #             box_content,
+    #             style={
+    #                 "border": "1px solid #ddd",
+    #                 "borderRadius": "5px",
+    #                 "padding": "10px",
+    #                 "margin": "5px",
+    #                 "width": "200px",
+    #                 "backgroundColor": "#f9f9f9",
+    #             },
+    #         )
+    #     )
+    return [fig] #, stats_boxes
 
 # Run the app
 if __name__ == "__main__":
