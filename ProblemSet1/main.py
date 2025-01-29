@@ -1,4 +1,5 @@
 import dash
+import dash_table
 from dash import dcc, html, Input, Output
 import plotly.graph_objs as go
 from dash.exceptions import PreventUpdate
@@ -131,7 +132,7 @@ app.layout = html.Div(
 @app.callback(
     [
         Output("plot", "figure"),
-        # Output("ols-results", "children")
+        Output("ols-results", "children")
     ],
     [
         Input("alpha", "value"),
@@ -161,29 +162,24 @@ def update_graph(alpha, beta, theta, rho, var_u, var_v, cov_uv):
         template="plotly_white"
     )
 
-    # params = estimate_parameters(x, y)
-    # # Generate statistical boxes
-    # stats_boxes = []
-    # for param, (value, p_value, r2) in params.items():
-    #     box_content = [html.P(f"{param}: {value:.4f}")]
-    #     if p_value is not None:
-    #         box_content.append(html.P(f"p-value: {p_value:.4f}"))
-    #     if r2 is not None:
-    #         box_content.append(html.P(f"R²: {r2:.4f}"))
-    #     stats_boxes.append(
-    #         html.Div(
-    #             box_content,
-    #             style={
-    #                 "border": "1px solid #ddd",
-    #                 "borderRadius": "5px",
-    #                 "padding": "10px",
-    #                 "margin": "5px",
-    #                 "width": "200px",
-    #                 "backgroundColor": "#f9f9f9",
-    #             },
-    #         )
-    #     )
-    return [fig] #, stats_boxes
+    table_y, table_x = estimate_parameters(x, y)
+
+    # Convert tables to Dash DataTable
+    def create_dash_table(df, title):
+        return html.Div([
+            html.H4(title, style={"textAlign": "center", "marginTop": "20px"}),
+            dash_table.DataTable(
+                columns=[{"name": i, "id": i} for i in df.columns],
+                data=df.to_dict("records"),
+                style_table={"overflowX": "auto"},
+                style_cell={"textAlign": "center", "padding": "5px"},
+                style_header={"fontWeight": "bold", "backgroundColor": "lightgrey"},
+            )
+        ])
+    return fig, html.Div([
+        create_dash_table(table_y, "Regression 1: y_t+1 = α + β * x_t + u_t+1"),
+        create_dash_table(table_x, "Regression 2: x_t+1 = θ + ρ * x_t + ν_t+1")
+    ])
 
 # Run the app
 if __name__ == "__main__":
