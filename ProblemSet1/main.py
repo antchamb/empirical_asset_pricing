@@ -162,6 +162,7 @@ def update_graph(alpha, beta, theta, rho, var_u, var_v, cov_uv):
         template="plotly_white"
     )
 
+<<<<<<< HEAD
     table_y, table_x = estimate_parameters(x, y)
 
     # Convert tables to Dash DataTable
@@ -180,6 +181,22 @@ def update_graph(alpha, beta, theta, rho, var_u, var_v, cov_uv):
         create_dash_table(table_y, "Regression 1: y_t+1 = α + β * x_t + u_t+1"),
         create_dash_table(table_x, "Regression 2: x_t+1 = θ + ρ * x_t + ν_t+1")
     ])
+=======
+    model_y, model_x = ols_regression(x, y)
+    ols_results = html.Div([
+        html.Pre(
+            model_y.summary().as_text(),
+            style={'whiteSpace': 'pre-wrap', 'fontFamily': 'monospace', 'backgroundColor': '#f9f9f9', 'padding': '10px'}
+        ),
+
+        html.Pre(model_x.summary().as_text(), style={'whiteSpace': 'pre-wrap', 'fontFamily': 'monospace', 'backgroundColor': '#f9f9f9', 'padding': '10px'}),
+    ], style={
+        "display": "flex",
+        "flex-direction": "right",
+        "width": "100vw"
+    })
+    return [fig, ols_results]
+>>>>>>> 1492174 (correcting statistical tables)
 
 # Run the app
 if __name__ == "__main__":
