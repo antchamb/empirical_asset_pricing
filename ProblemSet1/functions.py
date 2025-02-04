@@ -24,25 +24,7 @@ def routine(alpha, beta, theta, rho, var_u, var_v, cov_uv, T):
     return x, y
 
 # # Question 2
-<<<<<<< HEAD
-#
-def estimate_parameters(x, y):
-    """ Estimate parameters for the two predictive regressions using OLS. """
 
-    # OLS for y_t+1 = α + β * x_t + u_t+1
-    X_y = sm.add_constant(x[:-1])
-    ols_y = sm.OLS(y[1:], X_y).fit()
-
-    # OLS for x_t+1 = θ + ρ * x_t + ν_t+1
-    X_x = sm.add_constant(x[:-1])
-    ols_x = sm.OLS(x[1:], X_x).fit()
-
-    # Extract summary tables from statsmodels
-    table_y = ols_y.summary2().tables[1]
-    table_x = ols_x.summary2().tables[1]
-
-    return table_y, table_x
-=======
 def ols_regression(x, y):
 
     # Regression 1: y[t+1] = alpha + beta * x[t] + u[t+1]
@@ -55,4 +37,4 @@ def ols_regression(x, y):
     model_x = OLS(x_target, X).fit()
 
     return model_y, model_x
->>>>>>> 1492174 (correcting statistical tables)
+
