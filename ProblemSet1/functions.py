@@ -3,7 +3,6 @@ from statsmodels.regression.linear_model import OLS
 from statsmodels.tools.tools import add_constant
 import statsmodels.api as sm
 
-# Question 1
 def routine(alpha, beta, theta, rho, var_u, var_v, cov_uv, T):
     # Generate correlated normal random variables
     errors = np.random.multivariate_normal(
@@ -23,6 +22,7 @@ def routine(alpha, beta, theta, rho, var_u, var_v, cov_uv, T):
 
     return x, y
 
+
 # Question 2
 def ols_regression(x, y):
     # Regression 1: y[t+1] = alpha + beta * x[t] + u[t+1]
@@ -36,3 +36,31 @@ def ols_regression(x, y):
 
     return model_y, model_x
 
+# Question 3:
+def beta_repartition(alpha, beta, theta, rho, var_u, var_v, cov_uv, T, N):
+    x, y = np.zeros((T, N)), np.zeros((T, N))
+
+    errors = np.random.multivariate_normal(
+        [0, 0],
+        np.array([[var_u, cov_uv], [cov_uv, var_v]]),
+        size=(T, N)
+    )
+
+    u, v = errors[:, :, 0], errors[:, :, 1]
+
+    x[0, :] = theta / (1 - rho)
+    y[0, :] = alpha + beta * x[0, :]
+
+    for t in range(1, T):
+        x[t, :] = theta + rho * x[t-1, :] + v[t, :]
+        y[t, :] = alpha + beta * x[t - 1, :] + u[t, :]
+
+    beta_estimates = np.zeros(N)
+
+    for i in range(N):
+        X = sm.add_constant(x[:-1, i])
+        y_target = y[1:, i]
+        model = sm.OLS(y_target, X).fit()
+        beta_estimates[i] = model.params[1]
+
+    return beta_estimates

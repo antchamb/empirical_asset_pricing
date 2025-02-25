@@ -1,5 +1,5 @@
 import dash
-from dash import Input, Output, html, dcc
+from dash import Input, Output, State, html, dcc
 import plotly.graph_objs as go
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
@@ -58,7 +58,7 @@ parameters = html.Div([
                 step=0.01,
                 style={"marginBottom": "10px", "width": "100%"},
             ),
-        ]
+        ],
     ),
     html.Hr(),
     html.Div(
@@ -152,7 +152,7 @@ results = html.Div(
         html.H3("Question 3:"),
         dcc.Graph(id="q3-plot"),
     ],
-    style={"width": "95vw", "padding": "20px", "marginLeft": "6vw"},
+    style={"width": "90vw", "padding": "20px", "marginLeft": "6vw"},
 )
 
 
@@ -210,7 +210,54 @@ def update_graph(alpha, beta, theta, rho, var_u, var_v, cov_uv, T):
     })
     return [fig, ols_results]
 
+@app.callback(
+    Output("q3-plot", "figure"),
+    Input("run-sim-button", "n_clicks"),
+    [
+        State("alpha", "value"),
+        State("beta", "value"),
+        State("theta", "value"),
+        State("rho", "value"),
+        State("var_u", "value"),
+        State("var_v", "value"),
+        State("cov_uv", "value"),
+        State("T", "value"),
+        State("N", "value"),
+    ]
+)
+def run_simulation(n_clicks, alpha, beta, theta, rho, var_u, var_v, cov_uv, T, N):
+    if None in locals().values():
+        raise PreventUpdate
+    T, N = int(T), int(N)
 
+    beta_estimates = beta_repartition(alpha, beta, theta, rho, var_u, var_v, cov_uv, T, N)
+
+    fig = go.Figure()
+    fig.add_trace(go.Histogram(x=beta_estimates, nbinsx=50, name="Estimated β"))
+
+    fig.add_trace(go.Scatter(
+        x=[beta, beta], y=[0, 500],
+        mode="lines", name="β",
+        line=dict(color="green", dash="dash")
+    ))
+
+    beta_hat_mean = np.mean(beta_estimates)
+
+    fig.add_trace(go.Scatter(
+        x=[beta_hat_mean, beta_hat_mean], y=[0, 500],
+        mode="lines", name="E[β̂]",
+        line=dict(color="red", dash="dash")
+    ))
+
+    fig.update_layout(
+        title="Distribution of Estimated β (Bias Visualization)",
+        xaxis_title="Estimated β",
+        yaxis_title="Frequency",
+        template="plotly_white"
+    )
+
+
+    return fig
 
 # Run the app
 if __name__ == "__main__":
