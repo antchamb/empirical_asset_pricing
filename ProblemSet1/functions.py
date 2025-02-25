@@ -36,7 +36,7 @@ def ols_regression(x, y):
 
     return model_y, model_x
 
-# Question 3:
+# Question 3 & 4:
 def beta_repartition(alpha, beta, theta, rho, var_u, var_v, cov_uv, T, N):
     x, y = np.zeros((T, N)), np.zeros((T, N))
 
@@ -64,3 +64,14 @@ def beta_repartition(alpha, beta, theta, rho, var_u, var_v, cov_uv, T, N):
         beta_estimates[i] = model.params[1]
 
     return beta_estimates
+
+# Question 5:
+def ols_bias(biases, Tvalues):
+    Tvalues = np.array(Tvalues)
+
+    X = np.column_stack([np.ones(len(Tvalues)), 1/Tvalues, 1/(Tvalues**2)])
+    y = np.array(biases)
+
+    model = sm.OLS(y, X).fit()
+
+    return model

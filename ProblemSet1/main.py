@@ -122,19 +122,59 @@ parameters = html.Div([
                 style={"marginBottom": "10px", "width": "100%"},
             ),
             dbc.Button(
-                "Run Simulation",
+                "Q3 Simulation",
                 id="run-sim-button",
                 style={"marginTop": "10px", "width": "100%"},
             )
         ]
     ),
+    html.Hr(),
+    html.Div([
+        html.Label("N:"),
+        dcc.Input(
+            id="N-q4",
+            type="number",
+            value=100,
+            step=1,
+            style={"marginBottom": "10px", "width": "100%"},
+        ),
+        html.Label("T_min:"),
+        dcc.Input(
+            id="T-min-q4",
+            type="number",
+            value=50,
+            step=1,
+            style={"marginBottom": "10px", "width": "100%"},
+        ),
+        html.Label("T_max:"),
+        dcc.Input(
+            id="T-max-q4",
+            type="number",
+            value=1000,
+            step=1,
+            style={"marginBottom": "10px", "width": "100%"},
+        ),
+        html.Label("Segmentation:"),
+        dcc.Input(
+            id='T-parts',
+            type="number",
+            value=500,
+            step=1,
+            style={"marginBottom": "10px", "width": "100%"},
+        ),
+        dbc.Button(
+            "Q4 & Q5 Simulation",
+            id="q4-sim-button",
+            style={"marginBottom": "10px", "width": "100%"},
+        )
+    ])
 ], style={
-    "position": "fixed",  # ✅ Figer sur la page
+    "position": "fixed",
     "top": "0px",
     "left": "0px",
-    "width": "5vw",  # ✅ Largeur fixe
-    "height": "100vh",  # ✅ Occupe toute la hauteur
-    "overflow-y": "auto",  # ✅ Permet le scroll si besoin
+    "width": "5vw",
+    "height": "100vh",
+    "overflow-y": "auto",
     "backgroundColor": "#f8f9fa",
     "padding": "10px",
     "borderRight": "2px solid #ccc"
@@ -151,6 +191,12 @@ results = html.Div(
         html.Hr(),
         html.H3("Question 3:"),
         dcc.Graph(id="q3-plot"),
+        html.Hr(),
+        html.H3("Question 4:"),
+        dcc.Graph(id="q4-plot"),
+        html.Hr(),
+        html.H3("Question 5:"),
+        html.Div(id="ols-results-q5", style={"marginTop": "20px", "fontSize": "18px"}),
     ],
     style={"width": "90vw", "padding": "20px", "marginLeft": "6vw"},
 )
@@ -192,8 +238,6 @@ def update_graph(alpha, beta, theta, rho, var_u, var_v, cov_uv, T):
         yaxis_title="Value",
         template="plotly_white"
     )
-
-
 
     model_y, model_x = ols_regression(x, y)
     ols_results = html.Div([
@@ -256,8 +300,68 @@ def run_simulation(n_clicks, alpha, beta, theta, rho, var_u, var_v, cov_uv, T, N
         template="plotly_white"
     )
 
-
     return fig
+
+@app.callback(
+    [
+       Output('q4-plot', 'figure'),
+        Output("ols-results-q5", "children")
+    ],
+    Input("q4-sim-button", "n_clicks"),
+    [
+        State("alpha", "value"),
+        State("beta", "value"),
+        State("theta", "value"),
+        State("rho", "value"),
+        State("var_u", "value"),
+        State("var_v", "value"),
+        State("cov_uv", "value"),
+        State("N-q4", "value"),
+        State("T-min-q4", "value"),
+        State("T-max-q4", "value"),
+        State("T-parts", "value"),
+    ]
+)
+def q4_q5_sim(n_clicks, alpha, beta, theta, rho, var_u, var_v, cov_uv, N, Tmin, Tmax, Tparts):
+    if None in [alpha, beta, theta, rho, var_u, var_v, cov_uv, N, Tmin, Tmax, Tparts]:
+        raise PreventUpdate
+
+    Tvalues = np.round(np.linspace(Tmin, Tmax, Tparts)).astype(int)
+    Tvalues = np.unique(Tvalues)
+
+    beta_biases = []
+
+    for t in Tvalues:
+        beta_estimates = beta_repartition(alpha, beta, theta, rho, var_u, var_v, cov_uv, t, N)
+        bias = np.mean(beta_estimates) - beta
+        beta_biases.append(bias)
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=Tvalues, y=beta_biases, mode="lines+markers", name="Bias of β̂",
+        line=dict(color="blue")
+    ))
+
+    fig.update_layout(
+        title="Bias of Estimated β̂ vs. Sample Size T",
+        xaxis_title="Sample Size (T)",
+        yaxis_title="Bias (E[β̂] - β)",
+        template="plotly_white"
+    )
+
+    model = ols_bias(beta_biases, Tvalues)
+    ols_result = html.Div([
+        html.Pre(model.summary().as_text(),
+                 style={'whiteSpace': 'pre-wrap', 'fontFamily': 'monospace', 'backgroundColor': '#f9f9f9',
+                        'padding': '10px'}),
+    ], style={
+        "display": "flex",
+        "justify-content": "center",
+        "width": "100vw"
+    })
+
+    return [fig, ols_result]
+
 
 # Run the app
 if __name__ == "__main__":
