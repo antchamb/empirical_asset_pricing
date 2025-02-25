@@ -23,10 +23,8 @@ def routine(alpha, beta, theta, rho, var_u, var_v, cov_uv, T):
 
     return x, y
 
-# # Question 2
-
+# Question 2
 def ols_regression(x, y):
-
     # Regression 1: y[t+1] = alpha + beta * x[t] + u[t+1]
     Y = sm.add_constant(x[:-1])
     y_target = y[1:]
