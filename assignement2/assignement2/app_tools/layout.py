@@ -54,8 +54,8 @@ parameters = html.Div([
                 style={"marginBottom": "10px", "width": "100%"},
             ),
             dbc.Button(
-                "Q3 Simulation",
-                id="q3-sim-button",
+                "Q3 & Q4 Simulation",
+                id="sim-button",
                 style={"marginTop": "10px", "width": "100%"},
             )
         ]
@@ -85,6 +85,7 @@ results = html.Div([
     html.H3("Question 2:"),
     html.Div(id="q2-regression-results", style={"display": "flex", "flexDirection": "row"}),
     html.Hr(),
+    html.H3("Question 3:"),
     html.Div([
         html.Div([
             dcc.Graph(id='q3-alpha-ols', style={"width": "50vw"}),
@@ -94,6 +95,20 @@ results = html.Div([
         html.Div([
             dcc.Graph(id='q3-lambda-ols', style={"width": "50vw"}),
             dcc.Graph(id='q3-lambda-gls', style={"width": "50vw"}),
+        ],style={"display": 'flex', "flexDirection": "row"}
+        ),
+    ]),
+    html.Hr(),
+    html.H3("Question 4:"),
+    html.Div([
+        html.Div([
+            dcc.Graph(id='q4-alpha-ols', style={"width": "50vw"}),
+            dcc.Graph(id='q4-alpha-gls', style={"width": "50vw"}),
+        ],style={"display": 'flex', "flexDirection": "row"}
+        ),
+        html.Div([
+            dcc.Graph(id='q4-lambda-ols', style={"width": "50vw"}),
+            dcc.Graph(id='q4-lambda-gls', style={"width": "50vw"}),
         ],style={"display": 'flex', "flexDirection": "row"}
         ),
     ])

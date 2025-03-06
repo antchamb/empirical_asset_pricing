@@ -116,9 +116,13 @@ def q1_q2(alpha, beta, sigma, mu_f, sigma_f, T):
         Output("q3-lambda-ols", "figure"),
         Output("q3-alpha-gls", "figure"),
         Output("q3-lambda-gls", "figure"),
+        Output("q4-alpha-ols", "figure"),
+        Output("q4-lambda-ols", "figure"),
+        Output("q4-alpha-gls", "figure"),
+        Output("q4-lambda-gls", "figure"),
     ],
     [
-        Input("q3-sim-button", "n_clicks"),
+        Input("sim-button", "n_clicks"),
     ],
     [
         State("alpha-matrix", "data"),
@@ -144,8 +148,12 @@ def q3(n_clicks, alpha, beta, sigma, mu_f, sigma_f, T, N):
 
     alpha_ols_fig = go.Figure()
     alpha_ols_fig.add_trace(go.Histogram(x=alpha_ols, name="α_hat"))
+    alpha_ols_fig.add_trace(go.Scatter(
+        x=[np.mean(alpha), np.mean(alpha)], y=[0, max(alpha_ols)],
+        mode="lines", name="E[a]",
+    ))
     alpha_ols_fig.update_layout(
-        title="α OLS",
+        title="alpha OLS",
         title_x=0.5,
         xaxis_title="Values",
         yaxis_title="Frequency",
@@ -154,8 +162,18 @@ def q3(n_clicks, alpha, beta, sigma, mu_f, sigma_f, T, N):
     lambda_ols_fig = go.Figure()
     lambda_ols_fig.add_trace(go.Histogram(x=lambda_ols[:, 0], name="λ_hat_1"))
     lambda_ols_fig.add_trace(go.Histogram(x=lambda_ols[:, 1], name="λ_hat_2"))
+    lambda_ols_fig.add_trace(go.Scatter(
+        x=[float(mu_f[0]), float(mu_f[0])], y=[0, 100],
+        mode="lines", name="True λ1",
+        line=dict(color="green", dash="dash"),
+    ))
+    lambda_ols_fig.add_trace(go.Scatter(
+        x=[float(mu_f[1]), float(mu_f[1])], y=[0, 100],
+        mode="lines", name="True λ2",
+        line=dict(color="purple", dash="dash"),
+    ))
     lambda_ols_fig.update_layout(
-        title="λ OLS",
+        title="lambda OLS",
         title_x=0.5,
         xaxis_title="Values",
         yaxis_title="Frequency",
@@ -164,8 +182,12 @@ def q3(n_clicks, alpha, beta, sigma, mu_f, sigma_f, T, N):
 
     alpha_gls_fig = go.Figure()
     alpha_gls_fig.add_trace(go.Histogram(x=alpha_gls, name="α_hat"))
+    alpha_gls_fig.add_trace(go.Scatter(
+        x=[np.mean(alpha), np.mean(alpha)], y=[0, 100],
+        mode="lines", name="E[a]",
+    ))
     alpha_gls_fig.update_layout(
-        title="α GLS",
+        title="alpha GLS",
         title_x=0.5,
         xaxis_title="Values",
         yaxis_title="Frequency",
@@ -174,15 +196,66 @@ def q3(n_clicks, alpha, beta, sigma, mu_f, sigma_f, T, N):
     lambda_gls_fig = go.Figure()
     lambda_gls_fig.add_trace(go.Histogram(x=lambda_gls[:, 0], name="λ_hat_1"))
     lambda_gls_fig.add_trace(go.Histogram(x=lambda_gls[:, 1], name="λ_hat_2"))
+    lambda_gls_fig.add_trace(go.Scatter(
+        x=[float(mu_f[0]), float(mu_f[0])], y=[0, 100],
+        mode="lines", name="True λ1",
+        line=dict(color="green", dash="dash"),
+    ))
+    lambda_gls_fig.add_trace(go.Scatter(
+        x=[float(mu_f[1]), float(mu_f[1])], y=[0, 100],
+        mode="lines", name="True λ2",
+        line=dict(color="purple", dash="dash"),
+    ))
     lambda_gls_fig.update_layout(
-        title="λ GLS",
+        title="lambda GLS",
         title_x=0.5,
         xaxis_title="Values",
         yaxis_title="Frequency",
     )
 
+    centered_a_ols, centered_l1_ols, centered_l2_ols, centered_a_gls, centered_l1_gls, centered_l2_gls = centered_estimators(alpha, mu_f, alpha_ols, lambda_ols, alpha_gls, lambda_gls)
 
-    return alpha_ols_fig, lambda_ols_fig, alpha_gls_fig, lambda_gls_fig
+    center_a_fig = go.Figure()
+    center_a_fig.add_trace(go.Histogram(x=centered_a_ols, name="c_alpha_hat"))
+    center_a_fig.update_layout(
+        title="centered alpha OLS",
+        title_x=0.5,
+        xaxis_title="Values",
+        yaxis_title="Frequency",
+    )
+
+    center_l_fig = go.Figure()
+    center_l_fig.add_trace(go.Histogram(x=centered_l1_ols, name="c_lambda1_hat"))
+    center_l_fig.add_trace(go.Histogram(x=centered_l2_ols, name="c_lambda2_hat"))
+    center_l_fig.update_layout(
+        title="centered lambda OLS",
+        title_x=0.5,
+        xaxis_title="Values",
+        yaxis_title="Frequency",
+    )
+
+    center_a_gls_fig = go.Figure()
+    center_a_gls_fig.add_trace(go.Histogram(x=centered_a_gls, name="c_alpha_hat"))
+    center_a_gls_fig.update_layout(
+        title="centered alpha GLS",
+        title_x=0.5,
+        xaxis_title="Values",
+        yaxis_title="Frequency",
+    )
+
+    center_l_gls_fig = go.Figure()
+    center_l_gls_fig.add_trace(go.Histogram(x=centered_l1_gls, name="c_lambda1_hat"))
+    center_l_gls_fig.add_trace(go.Histogram(x=centered_l2_gls, name="c_lambda2_hat"))
+    center_l_gls_fig.update_layout(
+        title="centered lambda GLS",
+        title_x=0.5,
+        xaxis_title="Values",
+        yaxis_title="Frequency",
+    )
+
+    print(centered_a_ols.shape)
+    print(alpha_ols.shape)
+    return alpha_ols_fig, lambda_ols_fig, alpha_gls_fig, lambda_gls_fig, center_a_fig, center_l_fig, center_a_gls_fig, center_l_gls_fig
 
 
 if __name__ == "__main__":
