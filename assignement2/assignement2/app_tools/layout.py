@@ -60,6 +60,16 @@ parameters = html.Div([
             )
         ]
     ),
+    html.Hr(),
+    html.Div(
+        [
+            dbc.Button(
+                "Q5 Simulation",
+                id="q5-sim-button",
+                style={"marginTop": "10px", "width": "100%"},
+            )
+        ]
+    )
 
 ], style={
     "position": "fixed",
@@ -111,7 +121,19 @@ results = html.Div([
             dcc.Graph(id='q4-lambda-gls', style={"width": "50vw"}),
         ],style={"display": 'flex', "flexDirection": "row"}
         ),
-    ])
+    ]),
+    html.Hr(),
+    html.H3("Question 5:"),
+    html.Div([
+        html.Div([
+            dcc.Graph(id='q5-alpha-ols', style={"width": "50vw"}),
+            dcc.Graph(id='q5-alpha-gls', style={"width": "50vw"})
+        ],style={"display": 'flex', "flexDirection": "row"}),
+        html.Div([
+            dcc.Graph(id='q5-lambda-ols', style={"width": "50vw"}),
+            dcc.Graph(id='q5-lambda-gls', style={"width": "50vw"})
+        ], style={"display": 'flex', "flexDirection": "row"})
+    ]),
 ], style={
     "marginLeft": "8vw",
     "width": "90vw"
