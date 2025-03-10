@@ -5,7 +5,6 @@ from dash.exceptions import PreventUpdate
 import pandas as pd
 import numpy as np
 import plotly.graph_objs as go
-from tensorflow.python.ops.numpy_ops.np_dtypes import float64
 
 from app_tools.layout import layout
 from functions import *
@@ -185,6 +184,7 @@ def q3_q4(n_clicks, alpha, beta, sigma, mu_f, sigma_f, T, N):
         a_gls_fig.add_trace(go.Scatter(
             x=[float(alpha[i]),float(alpha[i])], y=[0, 100],
             mode="lines", name=f"True {i + 1}", line=dict(color="black", dash="dash"),
+            visible="legendonly"
         ))
     a_gls_fig.update_layout(
         title="Histograms of Alpha GLS",

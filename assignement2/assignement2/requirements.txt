@@ -1,0 +1,10 @@
+﻿dash==2.18.0
+dash-bootstrap-components==1.6.0
+dash-core-components==2.0.0
+dash-html-components==2.0.0
+dash-table==5.0.0
+dash_daq==0.5.0
+numpy==1.26.4
+pandas==2.2.2
+plotly==5.21.0
+statsmodels==0.14.2
