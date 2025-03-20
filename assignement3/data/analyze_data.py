@@ -40,15 +40,16 @@ gamma = 0.5
 # df = df.iloc[1:-1, :]
 
 
-def computeG(theta, df):
+def computeResidual(theta, df):
     """
-        Computes the moment conditions using the given instruments Z_T
+    Computes the moment conditions using the given instruments Z_T.
     """
     gamma, delta, k = theta
     
+    df = df.copy()
     df['Clag'] = df['C'].shift(1)
     df['M'] = delta * (df['C'] / df['C'].shift(1)) ** (k * (gamma - 1)) * \
-         (df['C'].shift(-1) / df['C']) ** (1 - gamma)
+              (df['C'].shift(-1) / df['C']) ** (1 - gamma)
     df['M'] = df['M'].shift(1)
     df.dropna(inplace=True)
     
@@ -56,59 +57,55 @@ def computeG(theta, df):
     zt = np.column_stack((np.ones(len(gt)), df['C'], df['Clag'], df['Mkt']))
     
     G = gt * zt
-    g_mean = np.mean(G, axis=0)
     
-    return g_mean.T @ g_mean
+    return G
+
+def gmmFirstStage(df, theta_initial):
+    
+    def objectiveFunc(theta):
+        
+        G = computeResidual(theta, df)
+        G_mean = np.mean(G, axis=0)
+        
+        return G_mean.T @ G_mean
+    
+    results = minimize(objectiveFunc, theta_initial, method='Nelder-Mead')
+
+    return results.x  # Return estimated parameters
 
 theta = [0.99, 2, 3]
-# G = computeG(theta, df)
 
-def gmmFirstStage(theta, df):
-    
-    gamma, delta, k = theta
-    
-    df['Clag'] = df['C'].shift(1)
-    df['M'] = delta * (df['C'] / df['C'].shift(1)) ** (k * (gamma - 1)) * \
-         (df['C'].shift(-1) / df['C']) ** (1 - gamma)
-    df['M'] = df['M'].shift(1)
-    df.dropna(inplace=True)
-    
-    def computeG(df):
-        """
-            Computes the moment conditions using the given instruments Z_T
-        """
+theta_hat = gmmFirstStage(df, theta)
 
+def neweyWestKernelEstimator(G):
+    
+    #  Truncation parameter
+    m = int(4 * ((G.shape[0] / 100) ** (2/9)))
+    T, k = G.shape
+    S_hat = (G.T @ G) / T
+    
+    for j in range(1, m+1):
+        Gammaj = (G[:-j].T @ G[j:]) / T
+        S_hat += (1 - j / (m + 1)) * (Gammaj + Gammaj.T)
+
+    return S_hat
+
+S_hat = neweyWestKernelEstimator(computeResidual(theta_hat, df))
+
+
+def gmmSecondStage(df, theta_hat, S_hat):
+    
+    W_T = np.linalg.inv(S_hat)
+    
+    def objectiveFunc(theta):
         
-        gt = np.column_stack([df['M'] * df['Mkt'] - 1] * 4)
-        zt = np.column_stack((np.ones(len(gt)), df['C'], df['Clag'], df['Mkt']))
+        G = computeResidual(theta, df)
+        G_mean = np.mean(G, axis=0)
         
-        G = gt * zt
-        g_mean = np.mean(G, axis=0)
+        return G_mean.T @ W_T @ G_mean
         
-        return g_mean.T @ g_mean
+    results = minimize(objectiveFunc, theta_hat, method='Nelder-Mead')
     
-    results = minimize(computeG, theta, method='Nelder-Mead')
-    
-    return results.x    
+    return results.x
 
-theta_est = gmmFirstStage(theta, df)
-
-
-
-# def neweyWestKernelEstimator(G):
-    
-#     #  Truncation parameter
-#     m = int(4 * ((G.shape[0] / 100) ** (2/9)))
-#     T, k = G.shape
-#     S_hat = (G.T @ G) / T
-    
-#     for j in range(1, m+1):
-#         Gammaj = (G[:-j].T @ G[j:]) / T
-#         S_hat += (1 - j / (m + 1)) * (Gammaj + Gammaj.T)
-
-#     return S_hat
-
-# S_hat = neweyWestKernelEstimator(G)
-
-
-    
+theta_hat_2 = gmmSecondStage(df, theta_hat, S_hat)
